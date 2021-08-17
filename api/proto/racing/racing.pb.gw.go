@@ -77,7 +77,7 @@ func RegisterRacingHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/racing.Racing/ListRaces")
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/racing.Racing/ListRaces", runtime.WithHTTPPathPattern("/v1/list-races"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -139,7 +139,7 @@ func RegisterRacingHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/racing.Racing/ListRaces")
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/racing.Racing/ListRaces", runtime.WithHTTPPathPattern("/v1/list-races"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

@@ -4,4 +4,4 @@ racing/racing
 *.out
 .idea
 .vscode
-
+*/*.exe
