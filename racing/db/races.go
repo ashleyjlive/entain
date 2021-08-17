@@ -20,7 +20,7 @@ type RacesRepo interface {
 	Init() error
 
 	// List will return a list of races.
-	List(filter *racing.ListRacesRequest) ([]*racing.Race, error)
+	List(request *racing.ListRacesRequest) ([]*racing.Race, error)
 }
 
 type racesRepo struct {
