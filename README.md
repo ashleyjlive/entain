@@ -8,6 +8,7 @@ Please treat the services provided as if they would live in a real-world environ
 
 - `api`: A basic REST gateway, forwarding requests onto service(s).
 - `racing`: A very bare-bones racing service.
+- [`sports`](sports/README.md): A service for sporting events.
 
 ```
 entain/
@@ -19,6 +20,12 @@ entain/
 │  ├─ proto/
 │  ├─ service/
 │  ├─ main.go
+├─ sports/
+│  ├─ db/
+│  ├─ proto/
+│  ├─ service/
+│  ├─ main.go/
+│  ├─ README.md
 ├─ README.md
 ```
 
