@@ -26,6 +26,7 @@ message ListRacesRequest {
 }
 
 message GetRaceRequest {
+  // The unique id of the race.
   int64 id = 1;
 }
 
