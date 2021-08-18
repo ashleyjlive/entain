@@ -8,52 +8,50 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/ashleyjlive/entain/sports/proto/sports"
 	"github.com/golang/protobuf/ptypes"
 	_ "github.com/mattn/go-sqlite3"
-
-	"github.com/ashleyjlive/entain/racing/proto/racing"
 )
 
-// RacesRepo provides repository access to races.
-type RacesRepo interface {
-	// Init will initialise our races repository.
+// EventsRepo provides repository access to events.
+type EventsRepo interface {
+	// Init will initialise our events repository.
 	Init() error
 
-	// List will return a list of races.
-	List(request *racing.ListRacesRequest) ([]*racing.Race, error)
-	Get(request *racing.GetRaceRequest) (*racing.Race, error)
+	// List will return a list of events.
+	List(request *sports.ListEventsRequest) ([]*sports.Event, error)
 }
 
-type racesRepo struct {
+type eventsRepo struct {
 	db   *sql.DB
 	init sync.Once
 }
 
-// NewRacesRepo creates a new races repository.
-func NewRacesRepo(db *sql.DB) RacesRepo {
-	return &racesRepo{db: db}
+// NewEventsRepo creates a new events repository.
+func NewEventsRepo(db *sql.DB) EventsRepo {
+	return &eventsRepo{db: db}
 }
 
-// Init prepares the race repository dummy data.
-func (r *racesRepo) Init() error {
+// Init prepares the events repository dummy data.
+func (r *eventsRepo) Init() error {
 	var err error
 
 	r.init.Do(func() {
-		// For test/example purposes, we seed the DB with some dummy races.
+		// For test/example purposes, we seed the DB with some dummy events.
 		err = r.seed()
 	})
 
 	return err
 }
 
-func (r *racesRepo) List(request *racing.ListRacesRequest) ([]*racing.Race, error) {
+func (r *eventsRepo) List(request *sports.ListEventsRequest) ([]*sports.Event, error) {
 	var (
 		err   error
 		query string
 		args  []interface{}
 	)
 
-	query = getRaceQueries()[racesList]
+	query = getEventsQueries()[eventsList]
 
 	query, args = r.applyFilter(query, request.Filter)
 	query = r.applyOrdering(query, request.OrderBy)
@@ -62,34 +60,10 @@ func (r *racesRepo) List(request *racing.ListRacesRequest) ([]*racing.Race, erro
 		return nil, err
 	}
 
-	return r.scanRaces(rows)
+	return r.scanEvents(rows)
 }
 
-func (r *racesRepo) Get(request *racing.GetRaceRequest) (*racing.Race, error) {
-	var (
-		query string
-		args  []interface{}
-	)
-
-	query = getRaceQueries()[getRace]
-
-	args = append(args, request.Id)
-	rows, err := r.db.Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	races, err := r.scanRaces(rows)
-	if err != nil {
-		return nil, err
-	} else if len(races) == 0 {
-		return nil, sql.ErrNoRows
-	} else {
-		return races[0], nil
-	}
-}
-
-func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFilter) (string, []interface{}) {
+func (r *eventsRepo) applyFilter(query string, filter *sports.ListEventsRequestFilter) (string, []interface{}) {
 	var (
 		clauses []string
 		args    []interface{}
@@ -99,18 +73,16 @@ func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFil
 		return query, args
 	}
 
-	if filter.Visible != nil {
-		// Visibility is optional. If nil, then allow non filtering of
-		// visibility.
-		clauses = append(clauses, "visible = ?")
-		args = append(args, filter.Visible)
+	if filter.Category != nil {
+		clauses = append(clauses, "LOWER(`category`) LIKE ?")
+		args = append(args, strings.ToLower(*filter.Category))
 	}
 
-	if len(filter.MeetingIds) > 0 {
-		clauses = append(clauses, "meeting_id IN ("+strings.Repeat("?,", len(filter.MeetingIds)-1)+"?)")
+	if len(filter.Ids) > 0 {
+		clauses = append(clauses, "id IN ("+strings.Repeat("?,", len(filter.Ids)-1)+"?)")
 
-		for _, meetingID := range filter.MeetingIds {
-			args = append(args, meetingID)
+		for _, id := range filter.Ids {
+			args = append(args, id)
 		}
 	}
 
@@ -121,7 +93,7 @@ func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFil
 	return query, args
 }
 
-func (r *racesRepo) applyOrdering(query string, orderBy *string) string {
+func (r *eventsRepo) applyOrdering(query string, orderBy *string) string {
 	const defaultOrder = " ORDER BY advertised_start_time"
 	if orderBy == nil {
 		query += defaultOrder
@@ -190,16 +162,16 @@ func isUnsafeColumnChar(c rune) bool {
 	}
 }
 
-func (m *racesRepo) scanRaces(
+func (m *eventsRepo) scanEvents(
 	rows *sql.Rows,
-) ([]*racing.Race, error) {
-	var races []*racing.Race
+) ([]*sports.Event, error) {
+	var events []*sports.Event
 
 	for rows.Next() {
-		var race racing.Race
+		var event sports.Event
 		var advertisedStart time.Time
 
-		if err := rows.Scan(&race.Id, &race.MeetingId, &race.Name, &race.Number, &race.Visible, &advertisedStart); err != nil {
+		if err := rows.Scan(&event.Id, &event.Name, &event.Category, &advertisedStart); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, nil
 			}
@@ -212,18 +184,10 @@ func (m *racesRepo) scanRaces(
 			return nil, err
 		}
 
-		if advertisedStart.Before(time.Now()) {
-			// All races that have an `advertised_start_time` in the past should
-			// reflect `CLOSED`
-			// Note that this depends on the system having the correct time.
-			race.Status = racing.Race_CLOSED
-		} else {
-			race.Status = racing.Race_OPEN
-		}
-		race.AdvertisedStartTime = ts
+		event.AdvertisedStartTime = ts
 
-		races = append(races, &race)
+		events = append(events, &event)
 	}
 
-	return races, nil
+	return events, nil
 }
