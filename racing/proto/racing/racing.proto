@@ -19,6 +19,7 @@ message ListRacesRequest {
   optional string order_by = 2;
 }
 
+// Request for GetRace call.
 message GetRaceRequest {
   // The unique id of the race.
   int64 id = 1;
