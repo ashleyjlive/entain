@@ -15,4 +15,4 @@ sports.RegisterSportsServer(grpcServer,sportsService)
 
 ## Interface
 
-`ListEvents(context.Context, *sports.ListEventsRequest) (*sports.ListEventsResponse, error))`
+`ListEvents(context.Context, *sports.ListEventsRequest) (*sports.ListEventsResponse, error)`
