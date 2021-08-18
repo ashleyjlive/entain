@@ -28,6 +28,7 @@ message ListRacesResponse {
 // Filter for listing races.
 message ListRacesRequestFilter {
   repeated int64 meeting_ids = 1;
+  // Returns Races that have `visible` set to the requested value.
   optional bool visible = 2; 
 }
 
