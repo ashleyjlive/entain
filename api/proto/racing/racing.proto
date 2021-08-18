@@ -54,5 +54,7 @@ message Race {
     CLOSED = 0;
     OPEN = 1;
   }
+  // Status reflects whether the Race is open or closed, based off the 
+  // advertised start time being in the past.
   Status status = 7;
 }
