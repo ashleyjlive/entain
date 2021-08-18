@@ -14,6 +14,7 @@ service Racing {
 
 message ListRacesRequest {
   ListRacesRequestFilter filter = 1;
+  // Orders the response by the given order string. See https://cloud.google.com/apis/design/design_patterns#sorting_order
   optional string order_by = 2;
 }
 
@@ -25,6 +26,7 @@ message ListRacesResponse {
 // Filter for listing races.
 message ListRacesRequestFilter {
   repeated int64 meeting_ids = 1;
+  // Returns Races that have `visible` set to the requested value.
   optional bool visible = 2;
 }
 
