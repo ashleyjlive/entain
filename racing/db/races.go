@@ -9,14 +9,15 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	_ "github.com/mattn/go-sqlite3"
 
-	"git.neds.sh/matty/entain/racing/proto/racing"
+	"github.com/ashleyjlive/entain/racing/proto/racing"
 )
 
 // RacesRepo provides repository access to races.
 type RacesRepo interface {
 	// Init will initialise our races repository.
 	Init() error
-
+	Clear() error
+	InsertRace(*racing.Race) error
 	// List will return a list of races.
 	List(filter *racing.ListRacesRequestFilter) ([]*racing.Race, error)
 }
@@ -41,6 +42,16 @@ func (r *racesRepo) Init() error {
 	})
 
 	return err
+}
+
+// Clears all data in the races repository.
+func (r *racesRepo) Clear() error {
+	return r.clear()
+}
+
+// Allows insertions of a race into the repository.
+func (r *racesRepo) InsertRace(race *racing.Race) error {
+	return r.insert(race)
 }
 
 func (r *racesRepo) List(filter *racing.ListRacesRequestFilter) ([]*racing.Race, error) {
