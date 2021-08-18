@@ -15,10 +15,13 @@ service Racing {
 
 message ListRacesRequest {
   ListRacesRequestFilter filter = 1;
+  // Orders the response by the given order string. See https://cloud.google.com/apis/design/design_patterns#sorting_order
   optional string order_by = 2;
 }
 
+// Request for GetRace call.
 message GetRaceRequest {
+  // The unique id of the race.
   int64 id = 1;
 }
 
@@ -30,6 +33,7 @@ message ListRacesResponse {
 // Filter for listing races.
 message ListRacesRequestFilter {
   repeated int64 meeting_ids = 1;
+  // Returns Races that have `visible` set to the requested value.
   optional bool visible = 2;
 }
 
@@ -53,6 +57,8 @@ message Race {
     CLOSED = 0;
     OPEN = 1;
   }
+  // Status reflects whether the Race is open or closed, based off the 
+  // advertised start time being in the past.
   Status status = 7;
 }
 

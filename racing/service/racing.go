@@ -31,6 +31,7 @@ func (s *racingService) ListRaces(ctx context.Context, in *racing.ListRacesReque
 	return &racing.ListRacesResponse{Races: races}, nil
 }
 
+// Retrieves a single race by its identifier, or, returns an error.
 func (s *racingService) GetRace(ctx context.Context, in *racing.GetRaceRequest) (*racing.Race, error) {
 	race, err := s.racesRepo.Get(in)
 	if err != nil {

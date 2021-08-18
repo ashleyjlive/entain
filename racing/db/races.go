@@ -83,8 +83,10 @@ func (r *racesRepo) Get(request *racing.GetRaceRequest) (*racing.Race, error) {
 	if err != nil {
 		return nil, err
 	} else if len(races) == 0 {
+		// No race found, return error.
 		return nil, sql.ErrNoRows
 	} else {
+		// Race found, return single race.
 		return races[0], nil
 	}
 }
