@@ -9,6 +9,7 @@ This defines the protobuf message types for the racing API.
 
 ### ListRacesRequest
 - Supports a filter parameter of type `ListRacesRequestFilter`.
+- Supports a order_by parameter of the form defined by [Google API Design](https://cloud.google.com/apis/design/design_patterns#sorting_order).
 
 ### ListRacesRequestFilter
 - A list of integer IDs can be supplied to perform a bulk lookup request. (optional)
