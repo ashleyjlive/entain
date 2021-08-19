@@ -7,7 +7,7 @@ Please treat the services provided as if they would live in a real-world environ
 ### Directory Structure
 
 - `api`: A basic REST gateway, forwarding requests onto service(s).
-- `racing`: A very bare-bones racing service.
+- [`racing`](racing/README.md): A very bare-bones racing service.
 
 ```
 entain/
