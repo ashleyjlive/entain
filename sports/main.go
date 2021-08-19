@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"flag"
 	"net"
+	"os"
+	"path/filepath"
 
 	"github.com/ashleyjlive/entain/sports/db"
 	"github.com/ashleyjlive/entain/sports/proto/sports"
@@ -14,6 +16,8 @@ import (
 
 var (
 	grpcEndpoint = flag.String("grpc-endpoint", "localhost:10000", "gRPC server endpoint")
+	dflt_db_path = filepath.Join(homeDir(), "entain", "sports", "data.db")
+	db_path      = flag.String("db_path", dflt_db_path, "The path of the database.")
 )
 
 func main() {
@@ -24,13 +28,25 @@ func main() {
 	}
 }
 
+func homeDir() string {
+	osPath, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	return osPath
+}
+
 func run() error {
 	conn, err := net.Listen("tcp", ":10000")
 	if err != nil {
 		return err
 	}
 
-	eventsDB, err := sql.Open("sqlite3", "./db/events.db")
+	err = os.MkdirAll(filepath.Dir(*db_path), os.ModeDir)
+	if err != nil {
+		panic(err)
+	}
+	eventsDB, err := sql.Open("sqlite3", *db_path)
 	if err != nil {
 		return err
 	}
