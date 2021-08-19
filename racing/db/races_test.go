@@ -143,7 +143,7 @@ func TestFetchAllEmpty(t *testing.T) {
 }
 
 func TestFetchAll(t *testing.T) {
-	racingDB, err := GetTestDB("db", "TestPopulateAndFetchRepo")
+	racingDB, err := GetTestDB("races", "TestPopulateAndFetchRepo")
 	if err != nil {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
