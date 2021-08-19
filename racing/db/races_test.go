@@ -146,7 +146,7 @@ func TestFetchAllEmpty(t *testing.T) {
 }
 
 func TestFetchAll(t *testing.T) {
-	racingDB, err := GetTestDB("db", "TestPopulateAndFetchRepo")
+	racingDB, err := GetTestDB("races", "TestPopulateAndFetchRepo")
 	if err != nil {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
@@ -177,7 +177,7 @@ func TestFetchAll(t *testing.T) {
 }
 
 func TestOrderBy(t *testing.T) {
-	racingDB, err := GetTestDB("db", "TestOrderBy")
+	racingDB, err := GetTestDB("races", "TestOrderBy")
 	if err != nil {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
@@ -261,7 +261,7 @@ func TestOrderBy(t *testing.T) {
 }
 
 func TestStatusField(t *testing.T) {
-	racingDB, err := GetTestDB("db", "TestStatusField")
+	racingDB, err := GetTestDB("races", "TestStatusField")
 	if err != nil {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
