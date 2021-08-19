@@ -175,6 +175,48 @@ func TestFetchAll(t *testing.T) {
 	}
 }
 
+func TestOrderBy(t *testing.T) {
+	racingDB, err := GetTestDB("db", "TestOrderBy")
+	if err != nil {
+		t.Fatalf("Failed to open testdb %v", err)
+	}
+	racesRepo := db.NewRacesRepo(racingDB)
+	_ = racesRepo.Init()
+
+	tm1, _ := ptypes.TimestampProto(time.Now().AddDate(0, 0, 2))
+	race1 :=
+		racing.Race{Id: int64(1), MeetingId: int64(5),
+			Name: "Test1", Number: int64(5),
+			Visible: true, AdvertisedStartTime: tm1}
+	err = racesRepo.InsertRace(&race1)
+	if err != nil {
+		t.Fatalf("Failed to insert first race %v.", err)
+	}
+	tm2, _ := ptypes.TimestampProto(time.Now().AddDate(0, 0, 2))
+	race2 :=
+		racing.Race{Id: int64(5), MeetingId: int64(3),
+			Name: "Test2", Number: int64(9),
+			Visible: false, AdvertisedStartTime: tm2}
+	err = racesRepo.InsertRace(&race2)
+	if err != nil {
+		t.Fatalf("Failed to insert second race %v.", err)
+	}
+
+	s := "name desc"
+	rq := racing.ListRacesRequest{OrderBy: &s}
+	rsp, err := racesRepo.List(&rq)
+	if err != nil {
+		t.Fatalf("Unable to retrieve races list.")
+	}
+	if len(rsp) != 2 {
+		t.Fatalf("Returned incorrect amount of races.")
+	}
+	if rsp[0].Id != race2.Id || rsp[1].Id != race1.Id {
+		t.Fatalf("Failed to sort by name descending: N1: %v, N2: %v",
+			rsp[0].Name, rsp[1].Name)
+	}
+}
+
 // Helpers //
 
 func GetRaces() []*racing.Race {
