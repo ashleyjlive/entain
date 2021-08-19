@@ -8,8 +8,8 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/golang/protobuf/ptypes"
 	_ "github.com/mattn/go-sqlite3"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ashleyjlive/entain/racing/proto/racing"
 )
@@ -18,10 +18,12 @@ import (
 type RacesRepo interface {
 	// Init will initialise our races repository.
 	Init() error
-
+	Clear() error
+	InsertRace(*racing.Race) error
 	// List will return a list of races.
 	List(request *racing.ListRacesRequest) ([]*racing.Race, error)
 	Get(request *racing.GetRaceRequest) (*racing.Race, error)
+	ListAll() ([]*racing.Race, error)
 }
 
 type racesRepo struct {
@@ -39,11 +41,20 @@ func (r *racesRepo) Init() error {
 	var err error
 
 	r.init.Do(func() {
-		// For test/example purposes, we seed the DB with some dummy races.
-		err = r.seed()
+		err = r.init_tbl()
 	})
 
 	return err
+}
+
+// Clears all data in the races repository.
+func (r *racesRepo) Clear() error {
+	return r.clear()
+}
+
+// Allows insertions of a race into the repository.
+func (r *racesRepo) InsertRace(race *racing.Race) error {
+	return r.insert(race)
 }
 
 func (r *racesRepo) List(request *racing.ListRacesRequest) ([]*racing.Race, error) {
@@ -89,6 +100,10 @@ func (r *racesRepo) Get(request *racing.GetRaceRequest) (*racing.Race, error) {
 		// Race found, return single race.
 		return races[0], nil
 	}
+}
+
+func (r *racesRepo) ListAll() ([]*racing.Race, error) {
+	return r.listAll()
 }
 
 func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFilter) (string, []interface{}) {
@@ -160,16 +175,16 @@ func toOrderBySql(input string) (*string, error) {
 		words := strings.Fields(str)
 		wordCount := len(words)
 		if wordCount > 2 || wordCount < 1 {
-			return nil, errors.New("Invalid order by term count.")
+			return nil, errors.New("invalid order by term count")
 		}
 		sortField := words[0]
 		if strings.IndexFunc(sortField, isUnsafeColumnChar) != -1 {
-			return nil, errors.New("Invalid column name.")
+			return nil, errors.New("invalid column name")
 		}
 		if wordCount == 2 {
 			sort := words[1]
 			if !(strings.EqualFold(sort, "asc") || strings.EqualFold(sort, "desc")) {
-				return nil, errors.New("Invalid order by dir parameter.")
+				return nil, errors.New("invalid order by dir parameter")
 			}
 			sortField += " " + sort
 		}
@@ -209,10 +224,7 @@ func (m *racesRepo) scanRaces(
 			return nil, err
 		}
 
-		ts, err := ptypes.TimestampProto(advertisedStart)
-		if err != nil {
-			return nil, err
-		}
+		ts := timestamppb.New(advertisedStart)
 
 		if advertisedStart.Before(time.Now()) {
 			// All races that have an `advertised_start_time` in the past should
