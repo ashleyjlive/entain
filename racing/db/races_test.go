@@ -304,6 +304,43 @@ func TestStatusField(t *testing.T) {
 	}
 }
 
+func TestGetRaceRequest(t *testing.T) {
+	racingDB, err := GetTestDB("db", "TestGetRaceRequest")
+	if err != nil {
+		t.Fatalf("Failed to open testdb %v", err)
+	}
+	racesRepo := db.NewRacesRepo(racingDB)
+	_ = racesRepo.Init()
+
+	tm1 := timestamppb.New(time.Now().AddDate(0, 0, 2))
+	race1 :=
+		racing.Race{Id: int64(1), MeetingId: int64(5),
+			Name: "Test1", Number: int64(5),
+			Visible: true, AdvertisedStartTime: tm1}
+	err = racesRepo.InsertRace(&race1)
+	if err != nil {
+		t.Fatalf("Failed to insert first race %v.", err)
+	}
+	tm2 := timestamppb.New(time.Now().AddDate(0, 0, -2))
+	race2 :=
+		racing.Race{Id: int64(5), MeetingId: int64(3),
+			Name: "Test2", Number: int64(9),
+			Visible: false, AdvertisedStartTime: tm2}
+	err = racesRepo.InsertRace(&race2)
+	if err != nil {
+		t.Fatalf("Failed to insert second race %v.", err)
+	}
+
+	rq := racing.GetRaceRequest{Id: race2.Id}
+	rsp, err := racesRepo.Get(&rq)
+	if err != nil {
+		t.Fatalf("Unable to retrieve individual race %v", rq.Id)
+	}
+	if rsp.Name != race2.Name {
+		t.Fatalf("Invalid race returned %v", rsp.Id)
+	}
+}
+
 // Helpers //
 
 func GetRaces() []*racing.Race {

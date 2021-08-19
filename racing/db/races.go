@@ -100,6 +100,8 @@ func (r *racesRepo) Get(request *racing.GetRaceRequest) (*racing.Race, error) {
 		// Race found, return single race.
 		return races[0], nil
 	}
+}
+
 func (r *racesRepo) ListAll() ([]*racing.Race, error) {
 	return r.listAll()
 }
