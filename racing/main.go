@@ -18,6 +18,7 @@ var (
 	grpcEndpoint = flag.String("grpc-endpoint", "localhost:9000", "gRPC server endpoint")
 	dflt_db_path = filepath.Join(homeDir(), "entain", "racing", "data.db")
 	db_path      = flag.String("db_path", dflt_db_path, "The path of the database.")
+	seed         = flag.Bool("seed", false, "Determines if sample data is to be inserted into the database")
 )
 
 func main() {
@@ -52,7 +53,7 @@ func run() error {
 	}
 
 	racesRepo := db.NewRacesRepo(racingDB)
-	if err := racesRepo.Init(); err != nil {
+	if err := racesRepo.Init(*seed); err != nil {
 		return err
 	}
 
