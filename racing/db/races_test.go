@@ -10,8 +10,9 @@ import (
 
 	"github.com/ashleyjlive/entain/racing/db"
 	"github.com/ashleyjlive/entain/racing/proto/racing"
-	"github.com/golang/protobuf/ptypes"
 	"syreclabs.com/go/faker"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRepo(t *testing.T) {
@@ -183,7 +184,7 @@ func TestOrderBy(t *testing.T) {
 	racesRepo := db.NewRacesRepo(racingDB)
 	_ = racesRepo.Init()
 
-	tm1, _ := ptypes.TimestampProto(time.Now().AddDate(0, 0, 2))
+	tm1 := timestamppb.New(time.Now().AddDate(0, 0, 2))
 	race1 :=
 		racing.Race{Id: int64(1), MeetingId: int64(5),
 			Name: "Test1", Number: int64(5),
@@ -192,7 +193,7 @@ func TestOrderBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to insert first race %v.", err)
 	}
-	tm2, _ := ptypes.TimestampProto(time.Now().AddDate(0, 0, 2))
+	tm2 := timestamppb.New(time.Now().AddDate(0, 0, -2))
 	race2 :=
 		racing.Race{Id: int64(5), MeetingId: int64(3),
 			Name: "Test2", Number: int64(9),
@@ -259,6 +260,50 @@ func TestOrderBy(t *testing.T) {
 	}
 }
 
+func TestStatusField(t *testing.T) {
+	racingDB, err := GetTestDB("db", "TestStatusField")
+	if err != nil {
+		t.Fatalf("Failed to open testdb %v", err)
+	}
+	racesRepo := db.NewRacesRepo(racingDB)
+	_ = racesRepo.Init()
+
+	tm1 := timestamppb.New(time.Now().AddDate(0, 0, 2))
+	race1 :=
+		racing.Race{Id: int64(1), MeetingId: int64(5),
+			Name: "Test1", Number: int64(5),
+			Visible: true, AdvertisedStartTime: tm1}
+	err = racesRepo.InsertRace(&race1)
+	if err != nil {
+		t.Fatalf("Failed to insert first race %v.", err)
+	}
+	tm2 := timestamppb.New(time.Now().AddDate(0, 0, -2))
+	race2 :=
+		racing.Race{Id: int64(5), MeetingId: int64(3),
+			Name: "Test2", Number: int64(9),
+			Visible: false, AdvertisedStartTime: tm2}
+	err = racesRepo.InsertRace(&race2)
+	if err != nil {
+		t.Fatalf("Failed to insert second race %v.", err)
+	}
+
+	// Test case
+	rq := racing.ListRacesRequest{}
+	rsp, err := racesRepo.List(&rq)
+	if err != nil {
+		t.Fatalf("Unable to retrieve races list.")
+	}
+	if len(rsp) != 2 {
+		t.Fatalf("Returned incorrect amount of races.")
+	}
+	if rsp[0].Status != racing.Race_CLOSED {
+		t.Fatalf("Returned invalid status flag for closed event %v.", rsp[0].Id)
+	}
+	if rsp[1].Status != racing.Race_OPEN {
+		t.Fatalf("Returned invalid status flag for open event %v.", rsp[1].Id)
+	}
+}
+
 // Helpers //
 
 func GetRaces() []*racing.Race {
@@ -270,7 +315,7 @@ func GetRaces() []*racing.Race {
 		name := faker.Team().Name()
 		number, _ := strconv.Atoi(faker.Number().Between(1, 12))
 		visible := randBool()
-		tm, _ := ptypes.TimestampProto(
+		tm := timestamppb.New(
 			faker.Time().Between(
 				time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 2)))
 		race :=

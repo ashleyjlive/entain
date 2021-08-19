@@ -6,6 +6,7 @@ import (
 
 	"github.com/ashleyjlive/entain/racing/proto/racing"
 	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"syreclabs.com/go/faker"
 )
 
@@ -58,10 +59,7 @@ func (r *racesRepo) listAll() ([]*racing.Race, error) {
 
 			return nil, err
 		}
-		ts, err := ptypes.TimestampProto(advertisedStart)
-		if err != nil {
-			return nil, err
-		}
+		ts := timestamppb.New(advertisedStart)
 
 		race.AdvertisedStartTime = ts
 

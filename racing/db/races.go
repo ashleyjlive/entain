@@ -8,8 +8,8 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/golang/protobuf/ptypes"
 	_ "github.com/mattn/go-sqlite3"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ashleyjlive/entain/racing/proto/racing"
 )
@@ -148,16 +148,16 @@ func toOrderBySql(input string) (*string, error) {
 		words := strings.Fields(str)
 		wordCount := len(words)
 		if wordCount > 2 || wordCount < 1 {
-			return nil, errors.New("Invalid order by term count.")
+			return nil, errors.New("invalid order by term count")
 		}
 		sortField := words[0]
 		if strings.IndexFunc(sortField, isUnsafeColumnChar) != -1 {
-			return nil, errors.New("Invalid column name.")
+			return nil, errors.New("invalid column name")
 		}
 		if wordCount == 2 {
 			sort := words[1]
 			if !(strings.EqualFold(sort, "asc") || strings.EqualFold(sort, "desc")) {
-				return nil, errors.New("Invalid order by dir parameter.")
+				return nil, errors.New("invalid order by dir parameter")
 			}
 			sortField += " " + sort
 		}
@@ -197,10 +197,7 @@ func (m *racesRepo) scanRaces(
 			return nil, err
 		}
 
-		ts, err := ptypes.TimestampProto(advertisedStart)
-		if err != nil {
-			return nil, err
-		}
+		ts := timestamppb.New(advertisedStart)
 
 		if advertisedStart.Before(time.Now()) {
 			// All races that have an `advertised_start_time` in the past should
