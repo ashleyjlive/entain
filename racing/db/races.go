@@ -20,6 +20,7 @@ type RacesRepo interface {
 	InsertRace(*racing.Race) error
 	// List will return a list of races.
 	List(filter *racing.ListRacesRequestFilter) ([]*racing.Race, error)
+	ListAll() ([]*racing.Race, error)
 }
 
 type racesRepo struct {
@@ -37,8 +38,7 @@ func (r *racesRepo) Init() error {
 	var err error
 
 	r.init.Do(func() {
-		// For test/example purposes, we seed the DB with some dummy races.
-		err = r.seed()
+		err = r.init_tbl()
 	})
 
 	return err
@@ -71,6 +71,10 @@ func (r *racesRepo) List(filter *racing.ListRacesRequestFilter) ([]*racing.Race,
 	}
 
 	return r.scanRaces(rows)
+}
+
+func (r *racesRepo) ListAll() ([]*racing.Race, error) {
+	return r.listAll()
 }
 
 func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFilter) (string, []interface{}) {

@@ -2,6 +2,8 @@ package db_test
 
 import (
 	"database/sql"
+	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
@@ -12,19 +14,8 @@ import (
 	"syreclabs.com/go/faker"
 )
 
-func GetTestDB() (*sql.DB, error) {
-	return sql.Open("sqlite3", "races_testdata/test.db")
-}
-
-func EnsureDB(t *testing.T) {
-	_, err := GetTestDB()
-	if err != nil {
-		t.Fatalf("Unexpected error %v", err)
-	}
-}
-
 func TestRepo(t *testing.T) {
-	racingDB, err := GetTestDB()
+	racingDB, err := GetTestDB("races", "TestRepo")
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
@@ -36,26 +27,27 @@ func TestRepo(t *testing.T) {
 }
 
 func TestNewRepo(t *testing.T) {
-	racingDB, err := GetTestDB()
+	racingDB, err := GetTestDB("races", "TestNewRepo")
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
 	racesRepo := db.NewRacesRepo(racingDB)
-	err1 := racesRepo.Clear()
+	races, err := racesRepo.ListAll()
 
-	if err1 != nil {
-		t.Fatalf("Unable to clear test database %v", err)
+	if len(races) != 0 {
+		t.Fatal("New repo contains elements")
 	}
 }
 
 func TestPopulateRepo(t *testing.T) {
-	racingDB, err := GetTestDB()
+	racingDB, err := GetTestDB("races", "TestPopulateRepo")
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
 	racesRepo := db.NewRacesRepo(racingDB)
+	_ = racesRepo.Init()
 	err = racesRepo.Clear()
 	if err != nil {
 		t.Fatalf("Unable to clear test database %v", err)
@@ -64,7 +56,7 @@ func TestPopulateRepo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unabale to convert time.")
 	}
-	races := getRaces()
+	races := GetRaces()
 	err = racesRepo.InsertRace(races[0])
 	if err != nil {
 		t.Fatalf("Unable to insert record into database.")
@@ -72,18 +64,19 @@ func TestPopulateRepo(t *testing.T) {
 }
 
 func TestPopulateAndFetchRepo(t *testing.T) {
-	racingDB, err := GetTestDB()
+	racingDB, err := GetTestDB("races", "TestPopulateAndFetchRepo")
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
 	racesRepo := db.NewRacesRepo(racingDB)
+	_ = racesRepo.Init()
 	err = racesRepo.Clear()
 	if err != nil {
 		t.Fatalf("Unable to clear test database %v", err)
 	}
 
-	races := getRaces()
+	races := GetRaces()
 	err = racesRepo.InsertRace(races[0])
 	if err != nil {
 		t.Fatalf("Unable to insert record into database.")
@@ -104,18 +97,19 @@ func TestPopulateAndFetchRepo(t *testing.T) {
 }
 
 func TestPopulateAndFilterVisible(t *testing.T) {
-	racingDB, err := GetTestDB()
+	racingDB, err := GetTestDB("races", "TestPopulateAndFilterVisible")
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
 	racesRepo := db.NewRacesRepo(racingDB)
+	_ = racesRepo.Init()
 	err = racesRepo.Clear()
 	if err != nil {
 		t.Fatalf("Unable to clear test database %v", err)
 	}
 
-	races := getRaces()
+	races := GetRaces()
 	err = racesRepo.InsertRace(races[0])
 	if err != nil {
 		t.Fatalf("Unable to insert record into database.")
@@ -131,7 +125,57 @@ func TestPopulateAndFilterVisible(t *testing.T) {
 	}
 }
 
-func getRaces() []*racing.Race {
+func TestFetchAllEmpty(t *testing.T) {
+	racingDB, err := GetTestDB("races", "TestFetchAllEmpty")
+	if err != nil {
+		t.Fatalf("Failed to open testdb %v", err)
+	}
+	racesRepo := db.NewRacesRepo(racingDB)
+	_ = racesRepo.Init()
+
+	races, err := racesRepo.ListAll()
+	if err != nil {
+		t.Fatalf("Failed to fetch all races %v.", err)
+	}
+	if len(races) > 0 {
+		t.Fatalf("List all request returned invalid dataset.")
+	}
+}
+
+func TestFetchAll(t *testing.T) {
+	racingDB, err := GetTestDB("db", "TestPopulateAndFetchRepo")
+	if err != nil {
+		t.Fatalf("Failed to open testdb %v", err)
+	}
+	racesRepo := db.NewRacesRepo(racingDB)
+	_ = racesRepo.Init()
+
+	races, _ := racesRepo.ListAll()
+	if len(races) > 0 {
+		t.Fatalf("List all request returned invalid dataset.")
+	}
+	races = GetRaces()
+	err = racesRepo.InsertRace(races[0])
+	if err != nil {
+		t.Fatalf("Failed to insert race record.")
+	}
+
+	outRaces, err := racesRepo.ListAll()
+	if err != nil {
+		t.Fatalf("Failed to list all list races %v", err)
+	}
+	if len(races) > 0 {
+		if outRaces[0].Id != races[0].Id {
+			t.Fatalf("Invalid race ID returned. Got %v, expected %v", outRaces[0].Id, races[0].Id)
+		}
+	} else {
+		t.Fatalf("Failed to fetch inserted race.")
+	}
+}
+
+// Helpers //
+
+func GetRaces() []*racing.Race {
 	var (
 		races []*racing.Race
 	)
@@ -158,4 +202,17 @@ func randBool() bool {
 		return false
 	}
 	return true
+}
+
+func GetTestDB(testType string, testName string) (*sql.DB, error) {
+	dir := filepath.Join(testType+"_testdata", testName)
+	err := os.RemoveAll(dir)
+	if err != nil {
+		return nil, err
+	}
+	err = os.MkdirAll(dir, os.ModeDir)
+	if err != nil {
+		return nil, err
+	}
+	return sql.Open("sqlite3", filepath.Join(dir, "test.db"))
 }
