@@ -176,7 +176,7 @@ func TestFetchAll(t *testing.T) {
 }
 
 func TestOrderBy(t *testing.T) {
-	racingDB, err := GetTestDB("db", "TestOrderBy")
+	racingDB, err := GetTestDB("races", "TestOrderBy")
 	if err != nil {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
