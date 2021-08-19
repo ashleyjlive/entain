@@ -18,8 +18,17 @@ type EventsRepo interface {
 	// Init will initialise our events repository.
 	Init() error
 
-	// List will return a list of events.
+	// Clears all entries from the repository.
+	Clear() error
+
+	// List will return a list of sports events.
 	List(request *sports.ListEventsRequest) ([]*sports.Event, error)
+
+	// Inserts a sport event entry into the repository.
+	InsertRace(*sports.Event) error
+
+	// Returns all sport events.
+	ListAll() ([]*sports.Event, error)
 }
 
 type eventsRepo struct {
@@ -37,11 +46,20 @@ func (r *eventsRepo) Init() error {
 	var err error
 
 	r.init.Do(func() {
-		// For test/example purposes, we seed the DB with some dummy events.
-		err = r.seed()
+		err = r.init_tbl()
 	})
 
 	return err
+}
+
+// Clears all data in the events repository.
+func (r *eventsRepo) Clear() error {
+	return r.clear()
+}
+
+// Allows insertions of a race into the repository.
+func (r *eventsRepo) InsertRace(event *sports.Event) error {
+	return r.insert(event)
 }
 
 func (r *eventsRepo) List(request *sports.ListEventsRequest) ([]*sports.Event, error) {
@@ -61,6 +79,10 @@ func (r *eventsRepo) List(request *sports.ListEventsRequest) ([]*sports.Event, e
 	}
 
 	return r.scanEvents(rows)
+}
+
+func (r *eventsRepo) ListAll() ([]*sports.Event, error) {
+	return r.listAll()
 }
 
 func (r *eventsRepo) applyFilter(query string, filter *sports.ListEventsRequestFilter) (string, []interface{}) {
@@ -130,16 +152,16 @@ func toOrderBySql(input string) (*string, error) {
 		words := strings.Fields(str)
 		wordCount := len(words)
 		if wordCount > 2 || wordCount < 1 {
-			return nil, errors.New("Invalid order by term count.")
+			return nil, errors.New("invalid order by term count")
 		}
 		sortField := words[0]
 		if strings.IndexFunc(sortField, isUnsafeColumnChar) != -1 {
-			return nil, errors.New("Invalid column name.")
+			return nil, errors.New("invalid column name")
 		}
 		if wordCount == 2 {
 			sort := words[1]
 			if !(strings.EqualFold(sort, "asc") || strings.EqualFold(sort, "desc")) {
-				return nil, errors.New("Invalid order by dir parameter.")
+				return nil, errors.New("invalid order by dir parameter")
 			}
 			sortField += " " + sort
 		}
