@@ -266,7 +266,7 @@ func TestStatusField(t *testing.T) {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
 	racesRepo := db.NewRacesRepo(racingDB)
-	_ = racesRepo.Init()
+	_ = racesRepo.Init(false)
 
 	tm1 := timestamppb.New(time.Now().AddDate(0, 0, 2))
 	race1 :=
