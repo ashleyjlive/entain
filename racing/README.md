@@ -19,6 +19,10 @@ For example:
 
     $ ./racing --grpc-endpoint=localhost:8080 --db_path:/foo/bar/db.db
 
+## API
+
+Please [see](proto/README.md) the documentation for the protobuf definitions.
+
 ## Testing
 
 To test individual packages:
