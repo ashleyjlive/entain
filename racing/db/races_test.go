@@ -202,6 +202,7 @@ func TestOrderBy(t *testing.T) {
 		t.Fatalf("Failed to insert second race %v.", err)
 	}
 
+	// Names descending
 	s := "name desc"
 	rq := racing.ListRacesRequest{OrderBy: &s}
 	rsp, err := racesRepo.List(&rq)
@@ -214,6 +215,47 @@ func TestOrderBy(t *testing.T) {
 	if rsp[0].Id != race2.Id || rsp[1].Id != race1.Id {
 		t.Fatalf("Failed to sort by name descending: N1: %v, N2: %v",
 			rsp[0].Name, rsp[1].Name)
+	}
+
+	// Names ascending
+	s = "name asc"
+	rq = racing.ListRacesRequest{OrderBy: &s}
+	rsp, err = racesRepo.List(&rq)
+	if err != nil {
+		t.Fatalf("Unable to retrieve races list.")
+	}
+	if len(rsp) != 2 {
+		t.Fatalf("Returned incorrect amount of races.")
+	}
+	if rsp[0].Id != race1.Id || rsp[1].Id != race2.Id {
+		t.Fatalf("Failed to sort by name ascending: N1: %v, N2: %v",
+			rsp[0].Name, rsp[1].Name)
+	}
+
+	// Multispace, multi param
+	s = "number		 asc,name desc"
+	//Race three has the same `number` value as race two, but name is different
+	race3 :=
+		racing.Race{Id: int64(8), MeetingId: int64(3),
+			Name: "Test3", Number: int64(9),
+			Visible: false, AdvertisedStartTime: tm2}
+	err = racesRepo.InsertRace(&race3)
+	if err != nil {
+		t.Fatalf("Failed to insert third race %v.", err)
+	}
+
+	rq = racing.ListRacesRequest{OrderBy: &s}
+	rsp, err = racesRepo.List(&rq)
+	if err != nil {
+		t.Fatalf("Unable to retrieve races list.")
+	}
+	if len(rsp) != 3 {
+		t.Fatalf("Returned incorrect amount of races.")
+	}
+	// Expect Race1, Race3 then Race2
+	if rsp[0].Id != race1.Id || rsp[1].Id != race3.Id || rsp[2].Id != race2.Id {
+		t.Fatalf("Failed to sort by name ascending: N1: %v, N2: %v, N3: %v",
+			rsp[0].Name, rsp[1].Name, rsp[2].Name)
 	}
 }
 
