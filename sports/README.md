@@ -25,6 +25,12 @@ For example:
 
 Please [see](proto/README.md) the documentation for the protobuf definitions.
 
+## Testing
+
+To test individual packages:
+
+    $ go test ./...
+
 ## Directory Structure
 
 ### [`db`](db/README.md)
@@ -36,9 +42,3 @@ Declares the gRPC API to use when interacting with the front facing API server.
 ### [`service`](service/README.md)
 
 Implements the service and its interactions with the data storage implementation.
-
-## Testing
-
-To test individual packages:
-
-    $ go test ./...
