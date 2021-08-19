@@ -11,16 +11,18 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	_ "github.com/mattn/go-sqlite3"
 
-	"git.neds.sh/matty/entain/racing/proto/racing"
+	"github.com/ashleyjlive/entain/racing/proto/racing"
 )
 
 // RacesRepo provides repository access to races.
 type RacesRepo interface {
 	// Init will initialise our races repository.
 	Init() error
-
+	Clear() error
+	InsertRace(*racing.Race) error
 	// List will return a list of races.
 	List(request *racing.ListRacesRequest) ([]*racing.Race, error)
+	ListAll() ([]*racing.Race, error)
 }
 
 type racesRepo struct {
@@ -38,11 +40,20 @@ func (r *racesRepo) Init() error {
 	var err error
 
 	r.init.Do(func() {
-		// For test/example purposes, we seed the DB with some dummy races.
-		err = r.seed()
+		err = r.init_tbl()
 	})
 
 	return err
+}
+
+// Clears all data in the races repository.
+func (r *racesRepo) Clear() error {
+	return r.clear()
+}
+
+// Allows insertions of a race into the repository.
+func (r *racesRepo) InsertRace(race *racing.Race) error {
+	return r.insert(race)
 }
 
 func (r *racesRepo) List(request *racing.ListRacesRequest) ([]*racing.Race, error) {
@@ -62,6 +73,10 @@ func (r *racesRepo) List(request *racing.ListRacesRequest) ([]*racing.Race, erro
 	}
 
 	return r.scanRaces(rows)
+}
+
+func (r *racesRepo) ListAll() ([]*racing.Race, error) {
+	return r.listAll()
 }
 
 func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFilter) (string, []interface{}) {
