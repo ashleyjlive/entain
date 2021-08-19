@@ -145,7 +145,7 @@ func TestFetchAllEmpty(t *testing.T) {
 }
 
 func TestFetchAll(t *testing.T) {
-	racingDB, err := GetTestDB("races", "TestPopulateAndFetchRepo")
+	racingDB, err := GetTestDB("races", "TestFetchAll")
 	if err != nil {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
@@ -181,7 +181,7 @@ func TestOrderBy(t *testing.T) {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
 	racesRepo := db.NewRacesRepo(racingDB)
-	_ = racesRepo.Init()
+	_ = racesRepo.Init(false)
 
 	tm1, _ := ptypes.TimestampProto(time.Now().AddDate(0, 0, 2))
 	race1 :=
