@@ -1,6 +1,6 @@
-module git.neds.sh/matty/entain/racing
+module github.com/ashleyjlive/entain/racing
 
-go 1.16
+go 1.17
 
 require (
 	github.com/golang/protobuf v1.5.2
@@ -16,4 +16,12 @@ require (
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	syreclabs.com/go/faker v1.2.3
+)
+
+require (
+	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/golang/glog v0.0.0-20210429001901-424d2337a529 // indirect
+	github.com/magefile/mage v1.10.0 // indirect
+	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
+	golang.org/x/text v0.3.5 // indirect
 )

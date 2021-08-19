@@ -3,16 +3,21 @@ package main
 import (
 	"database/sql"
 	"flag"
-	"git.neds.sh/matty/entain/racing/db"
-	"git.neds.sh/matty/entain/racing/proto/racing"
-	"git.neds.sh/matty/entain/racing/service"
+	"net"
+	"os"
+	"path/filepath"
+
+	"github.com/ashleyjlive/entain/racing/db"
+	"github.com/ashleyjlive/entain/racing/proto/racing"
+	"github.com/ashleyjlive/entain/racing/service"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"net"
 )
 
 var (
 	grpcEndpoint = flag.String("grpc-endpoint", "localhost:9000", "gRPC server endpoint")
+	dflt_db_path = filepath.Join(homeDir(), "entain", "racing", "data.db")
+	db_path      = flag.String("db_path", dflt_db_path, "The path of the database.")
 )
 
 func main() {
@@ -23,13 +28,25 @@ func main() {
 	}
 }
 
+func homeDir() string {
+	osPath, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	return osPath
+}
+
 func run() error {
 	conn, err := net.Listen("tcp", ":9000")
 	if err != nil {
 		return err
 	}
 
-	racingDB, err := sql.Open("sqlite3", "./db/racing.db")
+	err = os.MkdirAll(filepath.Dir(*db_path), os.ModeDir)
+	if err != nil {
+		panic(err)
+	}
+	racingDB, err := sql.Open("sqlite3", *db_path)
 	if err != nil {
 		return err
 	}

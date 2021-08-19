@@ -5,3 +5,4 @@ racing/racing
 .idea
 .vscode
 */*.exe
+*/**/*_testdata
