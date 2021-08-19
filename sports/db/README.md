@@ -40,5 +40,8 @@ if err := eventsRepo.Init(); err != nil {
 **Interface**
 
 The `EventsRepo` interface currently implements the following functions:
-- `Init() error`
-- `List(request *sports.ListEventsRequest) ([]*sports.Event, error)`
+- `Init(bool) error` - The input boolean determines if data seeding is required.
+- `Clear() error` - Clears all entries from the data storage. 
+- `List(request *sports.ListEventsRequest) ([]*sports.Event, error)` - Lists all sporting events given the inbound request.
+- `InsertRace(*sports.Event) error` - Inserts a race into the data storage.
+- `ListAll()  ([]*sports.Event, error)` - Returns all entries in the data storage.
