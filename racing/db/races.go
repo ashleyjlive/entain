@@ -17,7 +17,7 @@ import (
 // RacesRepo provides repository access to races.
 type RacesRepo interface {
 	// Init will initialise our races repository.
-	Init() error
+	Init(bool) error
 	Clear() error
 	InsertRace(*racing.Race) error
 	// List will return a list of races.
@@ -36,11 +36,17 @@ func NewRacesRepo(db *sql.DB) RacesRepo {
 }
 
 // Init prepares the race repository dummy data.
-func (r *racesRepo) Init() error {
+func (r *racesRepo) Init(seed bool) error {
 	var err error
 
 	r.init.Do(func() {
-		err = r.init_tbl()
+		if seed {
+			if err = r.seed(); err != nil {
+				err = r.init_tbl()
+			}
+		} else {
+			err = r.init_tbl()
+		}
 	})
 
 	return err
