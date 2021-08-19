@@ -5,7 +5,7 @@ This defines the protobuf message types for the racing API.
 
 **RPCS**
 
-- `ListRaces(ListRacesRequest) (ListRacesResponse)`
+- `ListRaces(ListRacesRequest) ListRacesResponse`
 
 ### ListRacesRequest
 - Supports a filter parameter of type `ListRacesRequestFilter`.
