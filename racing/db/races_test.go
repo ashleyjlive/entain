@@ -22,7 +22,7 @@ func TestRepo(t *testing.T) {
 	}
 
 	racesRepo := db.NewRacesRepo(racingDB)
-	if err := racesRepo.Init(); err != nil {
+	if err := racesRepo.Init(false); err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 }
@@ -48,7 +48,7 @@ func TestPopulateRepo(t *testing.T) {
 	}
 
 	racesRepo := db.NewRacesRepo(racingDB)
-	_ = racesRepo.Init()
+	_ = racesRepo.Init(false)
 	err = racesRepo.Clear()
 	if err != nil {
 		t.Fatalf("Unable to clear test database %v", err)
@@ -71,7 +71,7 @@ func TestPopulateAndFetchRepo(t *testing.T) {
 	}
 
 	racesRepo := db.NewRacesRepo(racingDB)
-	_ = racesRepo.Init()
+	_ = racesRepo.Init(false)
 	err = racesRepo.Clear()
 	if err != nil {
 		t.Fatalf("Unable to clear test database %v", err)
@@ -105,7 +105,7 @@ func TestPopulateAndFilterVisible(t *testing.T) {
 	}
 
 	racesRepo := db.NewRacesRepo(racingDB)
-	_ = racesRepo.Init()
+	_ = racesRepo.Init(false)
 	err = racesRepo.Clear()
 	if err != nil {
 		t.Fatalf("Unable to clear test database %v", err)
@@ -134,7 +134,7 @@ func TestFetchAllEmpty(t *testing.T) {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
 	racesRepo := db.NewRacesRepo(racingDB)
-	_ = racesRepo.Init()
+	_ = racesRepo.Init(false)
 
 	races, err := racesRepo.ListAll()
 	if err != nil {
@@ -146,12 +146,12 @@ func TestFetchAllEmpty(t *testing.T) {
 }
 
 func TestFetchAll(t *testing.T) {
-	racingDB, err := GetTestDB("races", "TestPopulateAndFetchRepo")
+	racingDB, err := GetTestDB("races", "TestFetchAll")
 	if err != nil {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
 	racesRepo := db.NewRacesRepo(racingDB)
-	_ = racesRepo.Init()
+	_ = racesRepo.Init(false)
 
 	races, _ := racesRepo.ListAll()
 	if len(races) > 0 {
@@ -182,7 +182,7 @@ func TestOrderBy(t *testing.T) {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
 	racesRepo := db.NewRacesRepo(racingDB)
-	_ = racesRepo.Init()
+	_ = racesRepo.Init(false)
 
 	tm1 := timestamppb.New(time.Now().AddDate(0, 0, 2))
 	race1 :=
