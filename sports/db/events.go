@@ -16,7 +16,7 @@ import (
 // EventsRepo provides repository access to events.
 type EventsRepo interface {
 	// Init will initialise our events repository.
-	Init() error
+	Init(bool) error
 
 	// Clears all entries from the repository.
 	Clear() error
@@ -42,11 +42,17 @@ func NewEventsRepo(db *sql.DB) EventsRepo {
 }
 
 // Init prepares the events repository dummy data.
-func (r *eventsRepo) Init() error {
+func (r *eventsRepo) Init(seed bool) error {
 	var err error
 
 	r.init.Do(func() {
-		err = r.init_tbl()
+		if seed {
+			if err = r.seed(); err != nil {
+				err = r.init_tbl()
+			}
+		} else {
+			err = r.init_tbl()
+		}
 	})
 
 	return err

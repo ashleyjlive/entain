@@ -19,7 +19,7 @@ func TestRepo(t *testing.T) {
 	}
 
 	eventsRepo := db.NewEventsRepo(eventDB)
-	if err := eventsRepo.Init(); err != nil {
+	if err := eventsRepo.Init(false); err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 }
@@ -45,7 +45,7 @@ func TestList(t *testing.T) {
 	}
 
 	eventsRepo := db.NewEventsRepo(eventDB)
-	if err := eventsRepo.Init(); err != nil {
+	if err := eventsRepo.Init(false); err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
@@ -83,7 +83,7 @@ func TestListOrdered(t *testing.T) {
 	}
 
 	eventsRepo := db.NewEventsRepo(eventDB)
-	if err := eventsRepo.Init(); err != nil {
+	if err := eventsRepo.Init(false); err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
@@ -124,7 +124,7 @@ func TestListCategoryFilter(t *testing.T) {
 	}
 
 	eventsRepo := db.NewEventsRepo(eventDB)
-	if err := eventsRepo.Init(); err != nil {
+	if err := eventsRepo.Init(false); err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
@@ -170,7 +170,7 @@ func TestListIdFilter(t *testing.T) {
 	}
 
 	eventsRepo := db.NewEventsRepo(eventDB)
-	if err := eventsRepo.Init(); err != nil {
+	if err := eventsRepo.Init(false); err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
@@ -209,21 +209,6 @@ func TestListIdFilter(t *testing.T) {
 			events[0].Id, events[1].Id)
 	}
 }
-
-// func GetList(t *testing.T) {
-// 	eventDB, err := GetTestDB("races", "TestRepo")
-// 	if err != nil {
-// 		t.Fatalf("Unexpected error %v", err)
-// 	}
-
-// 	eventsRepo := db.NewEventsRepo(eventDB)
-// 	if err := eventsRepo.Init(); err != nil {
-// 		t.Fatalf("Unexpected error %v", err)
-// 	}
-
-// 	rq := sports.ListEventsRequest{}
-// 	rsp, err := eventsRepo.List(&rq)
-// }
 
 // Helpers //
 

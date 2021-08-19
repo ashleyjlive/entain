@@ -16,6 +16,7 @@ You may provide optional command line arguments to the executable.
 Currently, you may configure:
 - `grpc-endpoint` - This is the endpoint that the front facing API server will speak to.
 - `db_path` - This is the path of the database that the service will utilise.
+- `seed` - Use this flag if you wish to have sample data inserted into the database.
 
 For example:
 
@@ -24,6 +25,16 @@ For example:
 ## API
 
 Please [see](proto/README.md) the documentation for the protobuf definitions.
+
+To test interaction with the API server (i.e. not directly with this service).
+
+```bash
+curl -X "POST" "http://localhost:8000/v1/list-events" \
+     -H 'Content-Type: application/json' \
+     -d $'{
+  "filter": {"category": "soccer"}
+}'
+```
 
 ## Testing
 
