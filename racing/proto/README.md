@@ -24,3 +24,4 @@ This defines the protobuf message types for the racing API.
 - The name of the race (string).
 - The visibility of the race (bool).
 - The advertised start time of the race (Timestamp).
+- A status flag indicating if the event is `OPEN` or `CLOSED` - this is based off the advertised start time with the systems current time.
