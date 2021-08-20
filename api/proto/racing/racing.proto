@@ -11,6 +11,9 @@ service Racing {
   rpc ListRaces(ListRacesRequest) returns (ListRacesResponse) {
     option (google.api.http) = { post: "/v1/list-races", body: "*" };
   }
+  rpc GetRace(GetRaceRequest) returns (Race) {
+    option (google.api.http) = { get: "/v1/race/{id}" };
+  }
 }
 
 /* Requests/Responses */
@@ -20,6 +23,12 @@ message ListRacesRequest {
   ListRacesRequestFilter filter = 1;
   // Orders the response by the given order string. See https://cloud.google.com/apis/design/design_patterns#sorting_order
   optional string order_by = 2;
+}
+
+// Request for GetRace call.
+message GetRaceRequest {
+  // The unique id of the race.
+  int64 id = 1;
 }
 
 // Response to ListRaces call.

@@ -6,10 +6,14 @@ This defines the protobuf message types for the racing API.
 **RPCS**
 
 - `ListRaces(ListRacesRequest) ListRacesResponse`
+- `GetRace(GetRaceRequest) Race`
 
 ### ListRacesRequest
 - Supports a filter parameter of type `ListRacesRequestFilter`.
 - Supports a order_by parameter of the form defined by [Google API Design](https://cloud.google.com/apis/design/design_patterns#sorting_order).
+
+### GetRaceRequest
+- The ID of the race to be retrieved (int64).
 
 ### ListRacesRequestFilter
 - A list of integer IDs can be supplied to perform a bulk lookup request. (optional)
