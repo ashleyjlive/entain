@@ -2,9 +2,11 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/golang/protobuf/ptypes"
 	_ "github.com/mattn/go-sqlite3"
@@ -19,7 +21,7 @@ type RacesRepo interface {
 	Clear() error
 	InsertRace(*racing.Race) error
 	// List will return a list of races.
-	List(filter *racing.ListRacesRequestFilter) ([]*racing.Race, error)
+	List(request *racing.ListRacesRequest) ([]*racing.Race, error)
 	ListAll() ([]*racing.Race, error)
 }
 
@@ -60,7 +62,7 @@ func (r *racesRepo) InsertRace(race *racing.Race) error {
 	return r.insert(race)
 }
 
-func (r *racesRepo) List(filter *racing.ListRacesRequestFilter) ([]*racing.Race, error) {
+func (r *racesRepo) List(request *racing.ListRacesRequest) ([]*racing.Race, error) {
 	var (
 		err   error
 		query string
@@ -69,8 +71,8 @@ func (r *racesRepo) List(filter *racing.ListRacesRequestFilter) ([]*racing.Race,
 
 	query = getRaceQueries()[racesList]
 
-	query, args = r.applyFilter(query, filter)
-
+	query, args = r.applyFilter(query, request.Filter)
+	query = r.applyOrdering(query, request.OrderBy)
 	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -113,6 +115,75 @@ func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFil
 	}
 
 	return query, args
+}
+
+func (r *racesRepo) applyOrdering(query string, orderBy *string) string {
+	const defaultOrder = " ORDER BY advertised_start_time"
+	if orderBy == nil {
+		query += defaultOrder
+	} else {
+		// DB implementation doesn't allow prepared statements for ORDER BY
+		// input variables.
+		// To allow for dynamic and safe ordering, we must sanitize and rebuild
+		// in SQL friendly format.
+		orderStr, err := toOrderBySql(*orderBy)
+		if err != nil {
+			query += defaultOrder
+		} else if orderStr != nil {
+			query += " ORDER BY " + *orderStr
+		} else {
+			query += defaultOrder
+		}
+	}
+	return query
+}
+
+// Accepts `order_by` definition from Google API standards [1] and returns an
+// output in SQL friendly format.
+// [1] - https://cloud.google.com/apis/design/design_patterns#sorting_order
+func toOrderBySql(input string) (*string, error) {
+	var (
+		terms []string
+	)
+	// 1. Splits the input string by comma.
+	// 2. Then for each element, determine the words (max of 2, min of 1).
+	// 3. Ensure that the first (column name) only contains valid chars.
+	// 4. Ensure that if sort parameter is provided, it is "asc" or "desc" only.
+	// 5. Rebuilds the string in CSV (SQL ORDER BY) format.
+	for _, str := range strings.Split(input, ",") {
+		words := strings.Fields(str)
+		wordCount := len(words)
+		if wordCount > 2 || wordCount < 1 {
+			return nil, errors.New("Invalid order by term count.")
+		}
+		sortField := words[0]
+		if strings.IndexFunc(sortField, isUnsafeColumnChar) != -1 {
+			return nil, errors.New("Invalid column name.")
+		}
+		if wordCount == 2 {
+			sort := words[1]
+			if !(strings.EqualFold(sort, "asc") || strings.EqualFold(sort, "desc")) {
+				return nil, errors.New("Invalid order by dir parameter.")
+			}
+			sortField += " " + sort
+		}
+		terms = append(terms, sortField)
+	}
+	output := strings.Join(terms, ",")
+	return &output, nil
+}
+
+// Determines if the supplied rune is safe to be used in the column name.
+// This err's on the side of caution and makes no attempt for numerics or
+// escaped special chars.
+func isUnsafeColumnChar(c rune) bool {
+	switch c {
+	case '_':
+		// Edge case for column names with underscores.
+		return false
+	default:
+		return !unicode.IsLetter(c)
+	}
 }
 
 func (m *racesRepo) scanRaces(

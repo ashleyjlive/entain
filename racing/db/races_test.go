@@ -84,7 +84,8 @@ func TestPopulateAndFetchRepo(t *testing.T) {
 	var a []int64
 	filter := racing.ListRacesRequestFilter{MeetingIds: a}
 	a = append(a, races[0].MeetingId)
-	rsp, err := racesRepo.List(&filter)
+	rq := racing.ListRacesRequest{Filter: &filter}
+	rsp, err := racesRepo.List(&rq)
 	if err != nil {
 		t.Fatalf("Unable to retrieve races list.")
 	}
@@ -116,7 +117,8 @@ func TestPopulateAndFilterVisible(t *testing.T) {
 	}
 	visible := true
 	filter := racing.ListRacesRequestFilter{Visible: &visible}
-	rsp, err := racesRepo.List(&filter)
+	rq := racing.ListRacesRequest{Filter: &filter}
+	rsp, err := racesRepo.List(&rq)
 	if err != nil {
 		t.Fatalf("Unable to retrieve races list.")
 	}
@@ -143,7 +145,7 @@ func TestFetchAllEmpty(t *testing.T) {
 }
 
 func TestFetchAll(t *testing.T) {
-	racingDB, err := GetTestDB("races", "TestPopulateAndFetchRepo")
+	racingDB, err := GetTestDB("races", "TestFetchAll")
 	if err != nil {
 		t.Fatalf("Failed to open testdb %v", err)
 	}
@@ -170,6 +172,90 @@ func TestFetchAll(t *testing.T) {
 		}
 	} else {
 		t.Fatalf("Failed to fetch inserted race.")
+	}
+}
+
+func TestOrderBy(t *testing.T) {
+	racingDB, err := GetTestDB("races", "TestOrderBy")
+	if err != nil {
+		t.Fatalf("Failed to open testdb %v", err)
+	}
+	racesRepo := db.NewRacesRepo(racingDB)
+	_ = racesRepo.Init(false)
+
+	tm1, _ := ptypes.TimestampProto(time.Now().AddDate(0, 0, 2))
+	race1 :=
+		racing.Race{Id: int64(1), MeetingId: int64(5),
+			Name: "Test1", Number: int64(5),
+			Visible: true, AdvertisedStartTime: tm1}
+	err = racesRepo.InsertRace(&race1)
+	if err != nil {
+		t.Fatalf("Failed to insert first race %v.", err)
+	}
+	tm2, _ := ptypes.TimestampProto(time.Now().AddDate(0, 0, 2))
+	race2 :=
+		racing.Race{Id: int64(5), MeetingId: int64(3),
+			Name: "Test2", Number: int64(9),
+			Visible: false, AdvertisedStartTime: tm2}
+	err = racesRepo.InsertRace(&race2)
+	if err != nil {
+		t.Fatalf("Failed to insert second race %v.", err)
+	}
+
+	// Names descending
+	s := "name desc"
+	rq := racing.ListRacesRequest{OrderBy: &s}
+	rsp, err := racesRepo.List(&rq)
+	if err != nil {
+		t.Fatalf("Unable to retrieve races list.")
+	}
+	if len(rsp) != 2 {
+		t.Fatalf("Returned incorrect amount of races.")
+	}
+	if rsp[0].Id != race2.Id || rsp[1].Id != race1.Id {
+		t.Fatalf("Failed to sort by name descending: N1: %v, N2: %v",
+			rsp[0].Name, rsp[1].Name)
+	}
+
+	// Names ascending
+	s = "name asc"
+	rq = racing.ListRacesRequest{OrderBy: &s}
+	rsp, err = racesRepo.List(&rq)
+	if err != nil {
+		t.Fatalf("Unable to retrieve races list.")
+	}
+	if len(rsp) != 2 {
+		t.Fatalf("Returned incorrect amount of races.")
+	}
+	if rsp[0].Id != race1.Id || rsp[1].Id != race2.Id {
+		t.Fatalf("Failed to sort by name ascending: N1: %v, N2: %v",
+			rsp[0].Name, rsp[1].Name)
+	}
+
+	// Multispace, multi param
+	s = "number		 asc,name desc"
+	//Race three has the same `number` value as race two, but name is different
+	race3 :=
+		racing.Race{Id: int64(8), MeetingId: int64(3),
+			Name: "Test3", Number: int64(9),
+			Visible: false, AdvertisedStartTime: tm2}
+	err = racesRepo.InsertRace(&race3)
+	if err != nil {
+		t.Fatalf("Failed to insert third race %v.", err)
+	}
+
+	rq = racing.ListRacesRequest{OrderBy: &s}
+	rsp, err = racesRepo.List(&rq)
+	if err != nil {
+		t.Fatalf("Unable to retrieve races list.")
+	}
+	if len(rsp) != 3 {
+		t.Fatalf("Returned incorrect amount of races.")
+	}
+	// Expect Race1, Race3 then Race2
+	if rsp[0].Id != race1.Id || rsp[1].Id != race3.Id || rsp[2].Id != race2.Id {
+		t.Fatalf("Failed to sort by name ascending: N1: %v, N2: %v, N3: %v",
+			rsp[0].Name, rsp[1].Name, rsp[2].Name)
 	}
 }
 
